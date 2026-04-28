@@ -1,4 +1,4 @@
-name: Kubernetes CD (Simple)
+name: Terraform + Kubernetes CD
 
 on:
   push:
@@ -10,32 +10,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      # 3️⃣ Build JAR
       - name: Build JAR with Maven
         run: mvn clean package
 
+      # 4️⃣ Build Docker image
       - name: Build Docker image
         run: docker build -t java-hello:latest .
 
-      # ✅ Create kind cluster AND wait until ready
-      - name: Create Kubernetes cluster
-        uses: helm/kind-action@v1.10.0
-        with:
-          cluster_name: kind
-          wait: 60s
+      # 5️⃣ Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      # ✅ Load image AFTER cluster is ready
+      # 6️⃣ Terraform Init
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      # 7️⃣ Terraform Apply (Create Kubernetes)
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: terraform
+
+      # 8️⃣ Load Docker image into kind cluster
       - name: Load image into kind
         run: kind load docker-image java-hello:latest --name kind
 
+      # 9️⃣ Deploy application to Kubernetes
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/
