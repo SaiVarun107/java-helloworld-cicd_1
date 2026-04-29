@@ -1,4 +1,4 @@
-name: Terraform + Kubernetes CD
+name: Java CD Pipeline
 
 on:
   push:
