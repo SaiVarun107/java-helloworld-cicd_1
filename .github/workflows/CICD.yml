@@ -10,53 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️ Checkout code
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️ Setup Java
+      # 2️⃣ Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️ Build JAR
+      # 3️⃣ Build JAR
       - name: Build JAR with Maven
         run: mvn clean package
 
-      # 4️ Build Docker image
+      # 4️⃣ Build Docker image
       - name: Build Docker image
         run: docker build -t java-hello:latest .
 
-      # 5️ Setup Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      # 5️⃣ Create kind Kubernetes cluster
+      - name: Create kind cluster
+        run: |
+          kind create cluster --name kind
 
-      # 6️ Terraform Init
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform
-
-      # 7️ Terraform Apply (Create Kubernetes)
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: terraform
-
-      # 8️ Load Docker image into kind cluster
+      # 6️⃣ Load Docker image into kind cluster
       - name: Load image into kind
-        run: kind load docker-image java-hello:latest --name kind
+        run: |
+          kind load docker-image java-hello:latest --name kind
 
-      # 9️ Deploy application to Kubernetes
+      # 7️⃣ Deploy application to Kubernetes
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/
           kubectl get pods
           kubectl get services
-      
-      # 10 Show Application Output 
+
+      # 8️⃣ Show Application Output
       - name: Get Application URL
         run: |
           NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
           echo "Application is running at:"
           echo "http://${NODE_IP}:30007"
+``
