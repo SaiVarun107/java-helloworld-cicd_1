@@ -53,3 +53,11 @@ jobs:
           kubectl apply -f k8s/
           kubectl get pods
           kubectl get services
+      
+      # 10 Show Application Output 
+      - name: Get Application URL
+        run: |
+          NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+          echo "Application is running at:"
+          echo "http://${NODE_IP}:30007"
+
